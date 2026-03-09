@@ -111,5 +111,19 @@
     <url-pattern>/versionDetails</url-pattern>
 </servlet-mapping>
 
+<servlet>
+    <servlet-name>ChunkUploadServlet</servlet-name>
+    <servlet-class>com.documentapp.controller.ChunkUploadServlet</servlet-class>
+    <multipart-config>
+        <max-file-size>-1</max-file-size>
+        <max-request-size>-1</max-request-size>
+        <file-size-threshold>0</file-size-threshold>
+    </multipart-config>
+</servlet>
+
+<servlet-mapping>
+    <servlet-name>ChunkUploadServlet</servlet-name>
+    <url-pattern>/uploadChunk</url-pattern>
+</servlet-mapping>
 
 </web-app>
