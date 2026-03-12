@@ -3,6 +3,7 @@ package com.documentapp.controller;
 import com.documentapp.dao.FileDAO;
 import com.documentapp.model.Files;
 import com.documentapp.util.DBConnection;
+import com.documentapp.util.AuthUtil;
 
 import jakarta.servlet.*;
 import jakarta.servlet.http.*;
@@ -22,12 +23,8 @@ public class FileListServlet extends HttpServlet {
                          HttpServletResponse response)
             throws ServletException, IOException {
 
-        Long userObj = (Long) request.getAttribute("userId");
+        Long userObj = AuthUtil.getUserIdFromCookie(request);
 
-        if (userObj == null) {
-            response.sendRedirect("login.jsp");
-            return;
-        }
 
         long userId = userObj;
 
@@ -40,9 +37,11 @@ public class FileListServlet extends HttpServlet {
             String cursorParam = request.getParameter("cursor");
             Timestamp cursor = null;
 
-            if (cursorParam != null && !cursorParam.isEmpty()) {
-                cursor = Timestamp.valueOf(cursorParam);
-            }
+            try {
+                if (cursorParam != null && !cursorParam.isEmpty()) {
+                    cursor = Timestamp.valueOf(cursorParam);
+                }
+            } catch (Exception ignored) {}
 
             String sortParam = request.getParameter("sort");
             boolean asc = "asc".equalsIgnoreCase(sortParam);
@@ -60,7 +59,7 @@ public class FileListServlet extends HttpServlet {
                 for (Files file : files) {
 
                     out.println("<tr>");
-                    out.println("<td>" + file.getFileName() + "</td>");
+                    out.println("<td>" + escapeHtml(file.getFileName()) + "</td>");
                     out.println("<td>" + file.getLatestVersion() + "</td>");
                     out.println("<td>" + file.getModifiedTime() + "</td>");
 
@@ -102,5 +101,14 @@ public class FileListServlet extends HttpServlet {
 
             DBConnection.close(con);
         }
+    }
+
+    private String escapeHtml(String s) {
+
+        if (s == null) return "";
+
+        return s.replace("&","&amp;")
+                .replace("<","&lt;")
+                .replace(">","&gt;");
     }
 }
