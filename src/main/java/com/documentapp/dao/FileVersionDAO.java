@@ -9,28 +9,27 @@ import java.util.List;
 
 public class FileVersionDAO {
 
-    public int getNextVersionNumber(Connection con, long fileId) {
+	public int getNextVersionNumber(Connection con, long fileId) {
 
-        String sql =
-                "SELECT version_number FROM file_versions WHERE file_id = ? ORDER BY version_number DESC LIMIT 1";
+	    String sql =
+	            "SELECT MAX(version_number) FROM file_versions WHERE file_id = ?";
 
-        int nextVersion = 1;
+	    int nextVersion = 1;
 
-        try {
+	    try {
 
-            ResultSet rs = DBConnection.executeQuery(con, sql, fileId);
+	        ResultSet rs = DBConnection.executeQuery(con, sql, fileId);
 
-            if (rs.next()) {
-                nextVersion = rs.getInt(1) + 1;
-            }
+	        if (rs.next() && rs.getInt(1) > 0) {
+	            nextVersion = rs.getInt(1) + 1;
+	        }
 
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+	    } catch (Exception e) {
+	        e.printStackTrace();
+	    }
 
-        return nextVersion;
-    }
-
+	    return nextVersion;
+	}
     public boolean addFileVersion(Connection con, FileVersion version) {
 
         String sql =
@@ -117,10 +116,6 @@ public class FileVersionDAO {
         }
     }
 
-
-    // ===============================
-    // CURSOR PAGINATION METHOD
-    // ===============================
 
     public List<FileVersion> getVersionsByCursor(Connection con,
                                                  long fileId,
