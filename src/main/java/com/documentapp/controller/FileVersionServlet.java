@@ -5,6 +5,7 @@ import com.documentapp.dao.FileVersionDAO;
 import com.documentapp.model.Files;
 import com.documentapp.model.FileVersion;
 import com.documentapp.util.DBConnection;
+import com.documentapp.util.AuthUtil;
 
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.*;
@@ -28,6 +29,16 @@ public class FileVersionServlet extends HttpServlet {
 
         try {
 
+           
+            Long userObj = AuthUtil.getUserIdFromCookie(request);
+
+            if (userObj == null) {
+                response.sendRedirect("login.jsp");
+                return;
+            }
+
+            long userId = userObj;
+
             con = DBConnection.getConnection();
 
             String fileIdParam = request.getParameter("fileId");
@@ -37,27 +48,42 @@ public class FileVersionServlet extends HttpServlet {
                 return;
             }
 
-            long fileId = Long.parseLong(fileIdParam);
+            long fileId;
+
+            try {
+                fileId = Long.parseLong(fileIdParam);
+            } catch (Exception e) {
+                response.sendRedirect("files");
+                return;
+            }
 
             FileDAO fileDAO = new FileDAO();
             Files file = fileDAO.getFileById(con, fileId);
 
+            if (file == null || file.getUploadedBy() != userId) {
+                response.sendRedirect("files");
+                return;
+            }
+
             String cursorParam = request.getParameter("cursor");
             Timestamp cursorTime = null;
 
-            if (cursorParam != null && !cursorParam.isEmpty()) {
-                cursorTime = Timestamp.valueOf(cursorParam);
-            }
+            try {
+                if (cursorParam != null && !cursorParam.isEmpty()) {
+                    cursorTime = Timestamp.valueOf(cursorParam);
+                }
+            } catch (Exception ignored) {}
 
+     
             String sortParam = request.getParameter("sort");
             boolean asc = "asc".equalsIgnoreCase(sortParam);
+
 
             FileVersionDAO dao = new FileVersionDAO();
 
             List<FileVersion> versionList =
                     dao.getVersionsByCursor(con, fileId, cursorTime, PAGE_SIZE, asc);
 
-            // AJAX infinite scroll request
             if (cursorParam != null) {
 
                 response.setContentType("text/html");
@@ -65,15 +91,20 @@ public class FileVersionServlet extends HttpServlet {
 
                 for (FileVersion v : versionList) {
 
+                    String notes =
+                            v.getNotes() == null ? "—" : escapeHtml(v.getNotes());
+
                     out.println("<tr>");
                     out.println("<td>v" + v.getVersionNumber() + "</td>");
                     out.println("<td>" + v.getUploadedTime() + "</td>");
-                    out.println("<td>" + (v.getNotes() == null ? "No Notes" : v.getNotes()) + "</td>");
+                    out.println("<td>" + notes + "</td>");
+
                     out.println("<td>");
                     out.println("<a href='view?versionId=" + v.getId() + "'>View File</a> ");
                     out.println("<a href='download?versionId=" + v.getId() + "'>Download</a> ");
                     out.println("<a href='versionDetails?versionId=" + v.getId() + "'>View Details</a>");
                     out.println("</td>");
+
                     out.println("</tr>");
                 }
 
@@ -111,5 +142,14 @@ public class FileVersionServlet extends HttpServlet {
 
             DBConnection.close(con);
         }
+    }
+
+    private String escapeHtml(String s) {
+
+        if (s == null) return "";
+
+        return s.replace("&","&amp;")
+                .replace("<","&lt;")
+                .replace(">","&gt;");
     }
 }
