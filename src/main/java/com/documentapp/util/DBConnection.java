@@ -59,10 +59,6 @@ public class DBConnection {
         }
     }
 
-    // ==============================
-    // INSERT + RETURN GENERATED ID
-    // ==============================
-
     public static long executeInsertAndReturnId(Connection con,
                                                 String sql,
                                                 Object... params) throws SQLException {
@@ -88,9 +84,6 @@ public class DBConnection {
         return -1;
     }
 
-    // ==============================
-    // SAFE CLOSE METHODS
-    // ==============================
 
     public static void close(ResultSet rs) {
         try {
