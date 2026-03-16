@@ -82,7 +82,7 @@ public class ChunkUploadServlet extends HttpServlet {
                                 fileIdParam
                         );
 
-                        System.out.println("UPLOAD MERGED: " + fileName);
+                   
 
                         response.getWriter().write("MERGED");
                         return;
