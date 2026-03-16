@@ -128,7 +128,6 @@ public class FileUploadServiceImpl implements FileUploadService {
         }
         folder.delete();
 
-        System.out.println("FileUploadServiceImpl: upload completed");
     }
 
     private String removeExtension(String fileName) {
